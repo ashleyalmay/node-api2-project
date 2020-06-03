@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const db = require("../data/db");
-
+/*-----------------------------get find-------------------------- */
   router.get('/', (req,res) => {
       db.find()
       .then(posts =>{
@@ -12,7 +12,7 @@ const db = require("../data/db");
           res.status(500).json({ error: "The posts information could not be retrieved."  })
       });
   })
-
+/*-----------------------------get findbyid-------------------------- */
   router.get('/:id', (req,res)=>{
       
       db.findById(req.params.id)
@@ -27,7 +27,7 @@ const db = require("../data/db");
          res.status(500).json({ error: "The posts information could not be retrieved." })
      })
   })
-
+/*-----------------------------getfindPostComments -------------------------- */
   router.get('/:id/comments', (req,res)=>{
 
         db.findPostComments(req.params.id)
@@ -42,7 +42,7 @@ const db = require("../data/db");
             res.status(500).json({ error: "The comments information could not be retrieved." })
         })
   })
-
+/*-----------------------------deletefindById -------------------------- */
   router.delete('/:id/posts', (req,res)=>{
       //finds post
     db.findById(req.params.id)
@@ -61,7 +61,7 @@ const db = require("../data/db");
         res.status(404).json({message: "The post with the specified ID does not exist." })
     })
   })
-
+/*-----------------------------post insert-------------------------- */
   router.post('/', (req, res) => {
    
     if(!req.body.title || !req.body.contents){
@@ -77,7 +77,7 @@ const db = require("../data/db");
         
     }
 })
-
+/*-----------------------------put update-------------------------- */
 router.put("/:id", (req, res) => {
     
     const id = req.params.id;
@@ -89,48 +89,30 @@ router.put("/:id", (req, res) => {
     }
     db.update(req.params.id, req.body)
     .then((id) => {
-        
         db.findById(req.params.id)
         .then(post => {
             res.status(200).json(post)
         })
-        .catch(error => {
-           
-            res.status(500).json({ error: "The post information could not be modified."});
-        });
+        .catch(error => {res.status(500).json({ error: "The post information could not be modified."});});
     })
-    .catch(error => {
-        res.status(500).json({ error: "The post information could not be modified."});
-    });
+    .catch(error => {res.status(500).json({ error: "The post information could not be modified."});});
 });
+/*-----------------------------post  insertcomment-------------------------- */
+router.post("/:id/comments", (req, res) => {
+    const id = req.params.id
+    comment = req.body
+    comment.post_id = id
 
-router.post('/:id/comments', (req, res) => {
-    //Check to see if the post exists
-    db.findById(req.params.id)
-        .then(post => {
-            if (post) {
-                if (req.body.text) {
-                    //Prepare the comment object and send to the DB
-                    db.insertComment({
-                        text: req.body.text,
-                        post_id: Number(req.params.id)
-                    })
-                        //created comment
-                        .then(commentid => {
-                            db.findCommentById(commentid.id)
-                                .then(comment => {
-                                    res.status(201).json(comment)
-                                })
-                        })
-                }
-                else res.status(400).json({ errorMessage: "Please provide text for the comment." })
-            }
-            else res.status(404).json({ message: "The post with the specified ID does not exist." })
+    if(!req.body.text){
+        res.status(404).json({message: "The post with the specified ID does not exist."})
+    } else if(req.body.text){ 
+        db.insertComment(comment)
+        .then(comment => {
+            res.status(201).json(comment)
+        }).catch(error => {
+            res.status(500).json({error: "The post could not be removed"})
         })
-        .catch(err => {
-            console.log(err)
-            res.status(500).json({ error: "There was an error while saving the comment to the database." })
-        })
+    }
 })
 
 
